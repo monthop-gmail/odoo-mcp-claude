@@ -1,0 +1,17 @@
+{
+  "servers": {
+    "production": {
+      "url": "https://your-odoo-instance.com",
+      "db": "your_database",
+      "username": "admin",
+      "password": "your_api_key_or_password"
+    },
+    "staging": {
+      "url": "https://staging.your-odoo-instance.com",
+      "db": "staging_database",
+      "username": "admin",
+      "password": "your_api_key_or_password"
+    }
+  },
+  "default_server": "production"
+}

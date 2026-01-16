@@ -1,0 +1,20 @@
+services:
+  odoo-mcp:
+    build: .
+    container_name: odoo-mcp-claude
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ODOO_URL=${ODOO_URL}
+      - ODOO_DB=${ODOO_DB}
+      - ODOO_USERNAME=${ODOO_USERNAME}
+      - ODOO_PASSWORD=${ODOO_PASSWORD}
+    volumes:
+      - ./odoo_servers.json:/app/odoo_servers.json:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/sse"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

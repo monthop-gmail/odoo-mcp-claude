@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "odoo-mcp"
+version = "0.1.0"
+description = "MCP Server for Odoo ERP integration with AI agents"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+    "mcp>=1.0.0",
+    "python-dotenv>=1.0.0",
+    "uvicorn>=0.30.0",
+    "starlette>=0.38.0",
+]
+
+[project.scripts]
+odoo-mcp = "odoo_mcp.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/odoo_mcp"]
