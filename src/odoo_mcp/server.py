@@ -514,6 +514,9 @@ async def run_sse_server(host: str, port: int):
                 await handle_sse(scope, receive, send)
             elif path == "/messages":
                 await handle_messages(scope, receive, send)
+            elif path == "/health":
+                response = Response("OK", status_code=200)
+                await response(scope, receive, send)
             else:
                 response = Response("Not Found", status_code=404)
                 await response(scope, receive, send)
