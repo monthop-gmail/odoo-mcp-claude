@@ -1,131 +1,59 @@
 # Odoo MCP Server
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![MCP](https://img.shields.io/badge/MCP-1.0.0-green.svg)](https://modelcontextprotocol.io/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-A Python bridge that exposes Odoo ERP operations to AI agents via the **Model Context Protocol (MCP)**. Enables Claude Code and other MCP-compatible AI tools to interact with Odoo databases through standardized tools.
+MCP (Model Context Protocol) Server สำหรับเชื่อมต่อ Odoo ERP กับ AI Agents เช่น Claude Code
 
 ## Features
 
-- **CRUD Operations** - Create, Read, Update, Delete records on any Odoo model
-- **Search & Filter** - Query data using Odoo's powerful domain filter syntax
-- **Execute Methods** - Call any method on Odoo models (e.g., `action_confirm` on `sale.order`)
-- **Schema Introspection** - Get field definitions and model structure
-- **Multi-Server Support** - Connect to multiple Odoo instances from a single server
-- **Dual Transport** - Supports both STDIO (local) and SSE/HTTP (Docker) modes
+- **CRUD Operations** - Create, Read, Update, Delete records
+- **Search & Filter** - ใช้ Odoo domain filter syntax
+- **Execute Methods** - เรียก method บน Odoo models
+- **Schema Introspection** - ดู field definitions
+- **Multi-Server Support** - เชื่อมต่อหลาย Odoo instances
 
-## Table of Contents
+## Tools
 
-- [Quick Start](#quick-start)
-- [Installation](#installation)
-  - [Docker (Recommended)](#docker-recommended)
-  - [Local Installation](#local-installation)
-- [Configuration](#configuration)
-  - [Single Server (Environment Variables)](#single-server-environment-variables)
-  - [Multi-Server Configuration](#multi-server-configuration)
-- [Usage with Claude Code](#usage-with-claude-code)
-- [Available Tools](#available-tools)
-- [Domain Syntax](#domain-syntax)
-- [Security](#security)
-- [Contributing](#contributing)
-- [License](#license)
-
-## Quick Start
-
-```bash
-# Clone the repository
-git clone https://github.com/YOUR_USERNAME/odoo-mcp-server.git
-cd odoo-mcp-server
-
-# Copy and configure environment
-cp env.example .env
-# Edit .env with your Odoo credentials
-
-# Start with Docker
-./start-mcp.sh
-
-# View logs
-docker logs -f odoo-mcp
-```
+| Tool | Description |
+|------|-------------|
+| `odoo_search_read` | ค้นหาและอ่าน records |
+| `odoo_search_count` | นับจำนวน records |
+| `odoo_read` | อ่าน records ตาม IDs |
+| `odoo_create` | สร้าง record ใหม่ |
+| `odoo_write` | แก้ไข records |
+| `odoo_delete` | ลบ records |
+| `odoo_execute` | เรียก method บน model |
+| `odoo_fields_get` | ดู field definitions |
+| `odoo_version` | ดูเวอร์ชัน Odoo |
+| `odoo_list_servers` | รายการ servers ที่ config ไว้ |
 
 ## Installation
 
-### Docker (Recommended)
-
-1. **Configure environment**
-   ```bash
-   cp env.example .env
-   ```
-
-   Edit `.env` with your Odoo credentials:
-   ```env
-   ODOO_URL=https://your-odoo-instance.com
-   ODOO_DB=your_database
-   ODOO_USERNAME=admin
-   ODOO_PASSWORD=your_api_key
-   ```
-
-2. **Start the server**
-   ```bash
-   ./start-mcp.sh
-   ```
-
-   Or manually:
-   ```bash
-   docker compose up -d
-   ```
-
-3. **Verify it's running**
-   ```bash
-   curl http://localhost:8000/sse
-   ```
-
-4. **Stop the server**
-   ```bash
-   ./stop-mcp.sh
-   ```
-
-### Local Installation
+### 1. Clone Repository
 
 ```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# or: venv\Scripts\activate  # Windows
-
-# Install package
-pip install -e .
-
-# Run server (STDIO mode)
-python -m odoo_mcp.server
-
-# Or run with SSE transport
-python -m odoo_mcp.server --sse --host 0.0.0.0 --port 8000
+git clone https://github.com/monthop-gmail/odoo-mcp-claude.git
+cd odoo-mcp-claude
 ```
 
-## Configuration
+### 2. Configure Environment
 
-### Single Server (Environment Variables)
+```bash
+cp env.example .env
+nano .env
+```
 
-Set these environment variables or create a `.env` file:
+```env
+ODOO_URL=https://your-odoo-instance.com
+ODOO_DB=your_database
+ODOO_USERNAME=admin
+ODOO_PASSWORD=your_api_key
+```
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `ODOO_URL` | Odoo instance URL | `https://odoo.example.com` |
-| `ODOO_DB` | Database name | `production` |
-| `ODOO_USERNAME` | Login username | `admin` |
-| `ODOO_PASSWORD` | Password or API key | `your_api_key` |
-
-### Multi-Server Configuration
-
-For connecting to multiple Odoo instances, create `odoo_servers.json`:
+### 3. Multi-Server Configuration (Optional)
 
 ```bash
 cp odoo_servers.json.example odoo_servers.json
+nano odoo_servers.json
 ```
-
-Edit `odoo_servers.json`:
 
 ```json
 {
@@ -147,180 +75,51 @@ Edit `odoo_servers.json`:
 }
 ```
 
-Use the `server` parameter in tool calls to specify which server:
+### 4. Start with Docker Compose
 
-```python
-# Uses default server
-odoo_search_read(model="res.partner", limit=10)
-
-# Uses specific server
-odoo_search_read(model="res.partner", limit=10, server="staging")
+```bash
+docker compose up -d --build
 ```
 
-## Usage with Claude Code
+### 5. Verify
 
-### Docker SSE Mode
+```bash
+# Check status
+docker compose ps
 
-Add to your `.mcp.json` or MCP configuration:
+# Test health
+curl http://localhost:8000/health
 
-```json
-{
-  "mcpServers": {
-    "odoo": {
-      "type": "sse",
-      "url": "http://localhost:8000/sse"
-    }
-  }
-}
+# View logs
+docker logs -f odoo-mcp
 ```
 
-### Local STDIO Mode
+## Add to Claude Code
 
-Add to `~/.claude/claude_desktop_config.json`:
+```bash
+# Add MCP server
+claude mcp add --transport sse --scope user odoo http://localhost:8000/sse
 
-```json
-{
-  "mcpServers": {
-    "odoo": {
-      "command": "python",
-      "args": ["-m", "odoo_mcp.server"],
-      "cwd": "/path/to/odoo-mcp-server",
-      "env": {
-        "ODOO_URL": "https://your-odoo.com",
-        "ODOO_DB": "your_database",
-        "ODOO_USERNAME": "admin",
-        "ODOO_PASSWORD": "your_api_key"
-      }
-    }
-  }
-}
+# Verify connection
+claude mcp list
+
+# Remove (if needed)
+claude mcp remove odoo
 ```
 
-## Available Tools
+## Endpoints
 
-### odoo_search_read
-
-Search and read records from any Odoo model.
-
-```json
-{
-  "model": "res.partner",
-  "domain": [["is_company", "=", true]],
-  "fields": ["name", "email", "phone"],
-  "limit": 10,
-  "offset": 0,
-  "order": "name asc"
-}
-```
-
-### odoo_search_count
-
-Count records matching a domain.
-
-```json
-{
-  "model": "sale.order",
-  "domain": [["state", "=", "sale"]]
-}
-```
-
-### odoo_read
-
-Read specific records by IDs.
-
-```json
-{
-  "model": "res.partner",
-  "ids": [1, 2, 3],
-  "fields": ["name", "email"]
-}
-```
-
-### odoo_create
-
-Create a new record.
-
-```json
-{
-  "model": "res.partner",
-  "values": {
-    "name": "New Customer",
-    "email": "customer@example.com",
-    "is_company": false
-  }
-}
-```
-
-### odoo_write
-
-Update existing records.
-
-```json
-{
-  "model": "res.partner",
-  "ids": [1],
-  "values": {
-    "phone": "+1234567890"
-  }
-}
-```
-
-### odoo_delete
-
-Delete records by IDs.
-
-```json
-{
-  "model": "res.partner",
-  "ids": [1, 2]
-}
-```
-
-### odoo_execute
-
-Execute any method on a model.
-
-```json
-{
-  "model": "sale.order",
-  "method": "action_confirm",
-  "args": [[1, 2, 3]]
-}
-```
-
-### odoo_fields_get
-
-Get field definitions for a model.
-
-```json
-{
-  "model": "res.partner",
-  "attributes": ["string", "type", "required"]
-}
-```
-
-### odoo_version
-
-Get Odoo server version information.
-
-```json
-{}
-```
-
-### odoo_list_servers
-
-List all configured servers (multi-server mode only).
-
-```json
-{}
-```
+| Endpoint | Description |
+|----------|-------------|
+| `http://localhost:8000/sse` | SSE connection for MCP |
+| `http://localhost:8000/health` | Health check |
 
 ## Domain Syntax
 
-Odoo uses a domain filter syntax as a list of conditions:
+Odoo ใช้ domain filter syntax:
 
 ```python
-# AND conditions (implicit)
+# AND conditions
 [["field1", "=", "value1"], ["field2", ">", 100]]
 
 # OR conditions
@@ -328,38 +127,16 @@ Odoo uses a domain filter syntax as a list of conditions:
 
 # NOT condition
 ["!", ["active", "=", false]]
-
-# Complex: (A AND B) OR C
-["|", "&", ["field1", "=", "A"], ["field2", "=", "B"], ["field3", "=", "C"]]
 ```
 
-**Available operators:**
-- Comparison: `=`, `!=`, `>`, `>=`, `<`, `<=`
-- Text: `like`, `ilike`, `not like`, `not ilike`
-- List: `in`, `not in`
-- Hierarchy: `child_of`, `parent_of`
+**Operators:** `=`, `!=`, `>`, `>=`, `<`, `<=`, `like`, `ilike`, `in`, `not in`
 
 ## Security
 
-- **Use API Keys** - Generate API keys in Odoo instead of using passwords
-- **Never commit credentials** - `.env` and `odoo_servers.json` are in `.gitignore`
-- **Least privilege** - Create a dedicated Odoo user with minimal required permissions
-- **Network security** - In production, use HTTPS and restrict network access
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- ใช้ API Keys แทน password
+- `.env` และ `odoo_servers.json` อยู่ใน `.gitignore`
+- สร้าง Odoo user แยกที่มี permissions จำกัด
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-**Note:** This project is not affiliated with Odoo S.A. Odoo is a trademark of Odoo S.A.
+MIT
