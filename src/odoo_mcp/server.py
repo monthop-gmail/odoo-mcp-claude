@@ -151,7 +151,7 @@ async def list_tools() -> list[Tool]:
                     },
                     "domain": {
                         "type": "array",
-                        "items": {"type": "array"},
+                        "items": {"type": "array", "items": {}},
                         "description": "Search domain as list of conditions. "
                         "Example: [['is_company', '=', True], ['country_id.code', '=', 'TH']]",
                         "default": [],
@@ -191,7 +191,7 @@ async def list_tools() -> list[Tool]:
                     },
                     "domain": {
                         "type": "array",
-                        "items": {"type": "array"},
+                        "items": {"type": "array", "items": {}},
                         "description": "Search domain as list of conditions",
                         "default": [],
                     },
