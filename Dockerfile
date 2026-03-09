@@ -16,8 +16,8 @@ RUN pip install --no-cache-dir .
 RUN useradd -m -u 1000 mcp
 USER mcp
 
-# Expose port for SSE mode
+# Expose port for HTTP mode
 EXPOSE 8000
 
-# Default: run with SSE transport for Docker
-CMD ["python", "-m", "odoo_mcp.server", "--sse"]
+# Default: run with Streamable HTTP transport for Docker
+CMD ["python", "-m", "odoo_mcp.server", "--http"]

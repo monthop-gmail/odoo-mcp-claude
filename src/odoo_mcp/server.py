@@ -474,62 +474,41 @@ async def run_stdio_server():
         )
 
 
-async def run_sse_server(host: str, port: int):
-    """Run the MCP server with SSE transport."""
-    from mcp.server.sse import SseServerTransport
+async def run_streamable_http_server(host: str, port: int):
+    """Run the MCP server with Streamable HTTP transport."""
+    import contextlib
+    from collections.abc import AsyncIterator
+
+    from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
     from starlette.applications import Starlette
-    from starlette.routing import Mount
-    from starlette.responses import Response
+    from starlette.requests import Request
+    from starlette.responses import PlainTextResponse
+    from starlette.routing import Mount, Route
     import uvicorn
 
-    sse = SseServerTransport("/messages")
+    session_manager = StreamableHTTPSessionManager(app=server)
 
-    async def handle_sse(scope, receive, send):
-        async with sse.connect_sse(scope, receive, send) as streams:
-            await server.run(
-                streams[0],
-                streams[1],
-                server.create_initialization_options(),
-            )
+    async def handle_streamable_http(scope, receive, send):
+        await session_manager.handle_request(scope, receive, send)
 
-    async def handle_messages(scope, receive, send):
-        await sse.handle_post_message(scope, receive, send)
+    async def health(request: Request):
+        return PlainTextResponse("OK")
 
-    from starlette.routing import Route
+    @contextlib.asynccontextmanager
+    async def lifespan(app: Starlette) -> AsyncIterator[None]:
+        async with session_manager.run():
+            yield
 
-    async def sse_endpoint(request):
-        from starlette.responses import StreamingResponse
+    starlette_app = Starlette(
+        debug=False,
+        routes=[
+            Route("/health", health),
+            Mount("/mcp", app=handle_streamable_http),
+        ],
+        lifespan=lifespan,
+    )
 
-        async def event_generator():
-            # This is handled by the ASGI interface directly
-            pass
-
-        # We need to handle this at the ASGI level
-        return Response("SSE endpoint - use ASGI interface", status_code=200)
-
-    # Use raw ASGI app for SSE
-    from starlette.routing import Router
-
-    async def asgi_app(scope, receive, send):
-        if scope["type"] == "http":
-            path = scope["path"]
-            if path == "/sse":
-                await handle_sse(scope, receive, send)
-            elif path == "/messages":
-                await handle_messages(scope, receive, send)
-            elif path == "/health":
-                response = Response("OK", status_code=200)
-                await response(scope, receive, send)
-            else:
-                response = Response("Not Found", status_code=404)
-                await response(scope, receive, send)
-        else:
-            response = Response("Not Found", status_code=404)
-            await response(scope, receive, send)
-
-    app = asgi_app
-
-    config = uvicorn.Config(app, host=host, port=port, log_level="info")
+    config = uvicorn.Config(starlette_app, host=host, port=port, log_level="info")
     server_instance = uvicorn.Server(config)
     await server_instance.serve()
 
@@ -540,26 +519,26 @@ def main():
 
     parser = argparse.ArgumentParser(description="Odoo MCP Server")
     parser.add_argument(
-        "--sse",
+        "--http",
         action="store_true",
-        help="Run with SSE transport (HTTP) instead of stdio",
+        help="Run with Streamable HTTP transport instead of stdio",
     )
     parser.add_argument(
         "--host",
         default="0.0.0.0",
-        help="Host to bind SSE server (default: 0.0.0.0)",
+        help="Host to bind HTTP server (default: 0.0.0.0)",
     )
     parser.add_argument(
         "--port",
         type=int,
         default=8000,
-        help="Port for SSE server (default: 8000)",
+        help="Port for HTTP server (default: 8000)",
     )
 
     args = parser.parse_args()
 
-    if args.sse:
-        asyncio.run(run_sse_server(args.host, args.port))
+    if args.http:
+        asyncio.run(run_streamable_http_server(args.host, args.port))
     else:
         asyncio.run(run_stdio_server())
 

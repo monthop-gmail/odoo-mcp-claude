@@ -25,8 +25,8 @@ docker compose down && docker compose build --no-cache && docker compose up -d
 pip install -e .
 python -m odoo_mcp.server
 
-# Run with SSE transport
-python -m odoo_mcp.server --sse --host 0.0.0.0 --port 8000
+# Run with Streamable HTTP transport
+python -m odoo_mcp.server --http --host 0.0.0.0 --port 8000
 ```
 
 ## Architecture
@@ -41,7 +41,7 @@ The codebase consists of two main components in `src/odoo_mcp/`:
 
 **MCP Server** (`server.py`) - High-level tool registry:
 - Async server using MCP protocol v1.0.0+
-- Two transport modes: STDIO (local) and SSE/HTTP (Docker)
+- Two transport modes: STDIO (local) and Streamable HTTP (Docker)
 - Registers 10 tools: `odoo_search_read`, `odoo_search_count`, `odoo_read`, `odoo_create`, `odoo_write`, `odoo_delete`, `odoo_execute`, `odoo_fields_get`, `odoo_version`, `odoo_list_servers`
 - Tools defined in `list_tools()` decorator, implementations in `call_tool()` dispatcher
 
@@ -90,7 +90,7 @@ Fallback for backward compatibility:
 - `ODOO_USERNAME` - User login
 - `ODOO_PASSWORD` - Password or API key (API key recommended)
 
-MCP client configuration in `.mcp.json` defines the SSE endpoint connection.
+MCP client configuration in `.mcp.json` defines the Streamable HTTP endpoint connection.
 
 ## Odoo Concepts
 

@@ -98,7 +98,7 @@ docker logs -f odoo-mcp
 
 ```bash
 # Add MCP server
-claude mcp add --transport sse --scope user odoo http://localhost:8000/sse
+claude mcp add --transport streamable-http --scope user odoo http://localhost:8000/mcp
 
 # Verify connection
 claude mcp list
@@ -111,8 +111,9 @@ claude mcp remove odoo
 
 | Endpoint | Description |
 |----------|-------------|
-| `http://localhost:8000/sse` | SSE connection for MCP |
-| `http://localhost:8000/health` | Health check |
+| `POST http://localhost:8000/mcp` | MCP message endpoint (Streamable HTTP) |
+| `GET http://localhost:8000/mcp` | SSE stream endpoint (session-based) |
+| `DELETE http://localhost:8000/mcp` | Session termination |
 
 ## Domain Syntax
 
